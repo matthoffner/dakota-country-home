@@ -19,17 +19,56 @@ async function getStripe() {
   return stripeInstance;
 }
 
+// Find the messages container within ChatKit to inject inline content
+function getMessagesContainer() {
+  if (!chatkitElement) return null;
+
+  // Try shadow DOM first
+  const shadow = chatkitElement.shadowRoot;
+  if (shadow) {
+    // Look for common message container patterns
+    const container = shadow.querySelector('[class*="messages"]') ||
+                      shadow.querySelector('[class*="thread"]') ||
+                      shadow.querySelector('[class*="conversation"]') ||
+                      shadow.querySelector('main') ||
+                      shadow.querySelector('[role="log"]');
+    if (container) return container;
+  }
+
+  // Fallback to ChatKit element itself
+  return chatkitElement;
+}
+
+// Inject content inline in the chat, styled as an assistant message
+function injectInlineWidget(id, content) {
+  // Remove existing widget with same id
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
+
+  const container = getMessagesContainer();
+  if (!container) {
+    console.warn('Could not find messages container');
+    return null;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.id = id;
+  wrapper.className = 'chatkit-inline-widget';
+  wrapper.innerHTML = content;
+
+  // Insert at the end of messages
+  container.appendChild(wrapper);
+
+  // Scroll to the widget
+  wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+  return wrapper;
+}
+
 function handleBookingForm(data) {
   const { min_date } = data;
 
-  // Remove existing form if any
-  const existing = document.getElementById('booking-form-container');
-  if (existing) existing.remove();
-
-  // Create booking form container
-  const formContainer = document.createElement('div');
-  formContainer.id = 'booking-form-container';
-  formContainer.innerHTML = `
+  const formHTML = `
     <div class="booking-form">
       <h3>Book Your Stay</h3>
       <div class="form-row">
@@ -66,18 +105,15 @@ function handleBookingForm(data) {
     </div>
   `;
 
-  // Find the chat area and append
-  const chatArea = document.querySelector('#chat-container');
-  if (chatArea) {
-    chatArea.appendChild(formContainer);
-  }
+  const widget = injectInlineWidget('booking-form-container', formHTML);
+  if (!widget) return;
 
   // Handle form submission
-  document.getElementById('check-availability-btn').addEventListener('click', () => {
-    const checkin = document.getElementById('checkin').value;
-    const checkout = document.getElementById('checkout').value;
-    const guests = document.getElementById('guests').value;
-    const email = document.getElementById('email').value;
+  widget.querySelector('#check-availability-btn').addEventListener('click', () => {
+    const checkin = widget.querySelector('#checkin').value;
+    const checkout = widget.querySelector('#checkout').value;
+    const guests = widget.querySelector('#guests').value;
+    const email = widget.querySelector('#email').value;
 
     if (!checkin || !checkout || !guests || !email) {
       alert('Please fill in all fields');
@@ -88,28 +124,17 @@ function handleBookingForm(data) {
     const message = `I want to book from ${checkin} to ${checkout} for ${guests} guest(s). My email is ${email}`;
 
     // Remove the form
-    formContainer.remove();
+    widget.remove();
 
     // Send the message to ChatKit
     if (chatkitElement && chatkitElement.sendMessage) {
       chatkitElement.sendMessage(message);
-    } else {
-      // Fallback: find input and submit
-      const iframe = document.querySelector('iframe[name="chatkit"]');
-      if (iframe && iframe.contentDocument) {
-        const input = iframe.contentDocument.querySelector('textarea, input[type="text"]');
-        if (input) {
-          input.value = message;
-          const form = input.closest('form');
-          if (form) form.submit();
-        }
-      }
     }
   });
 
   // Update checkout min date when checkin changes
-  document.getElementById('checkin').addEventListener('change', (e) => {
-    const checkoutInput = document.getElementById('checkout');
+  widget.querySelector('#checkin').addEventListener('change', (e) => {
+    const checkoutInput = widget.querySelector('#checkout');
     checkoutInput.min = e.target.value;
     if (checkoutInput.value && checkoutInput.value <= e.target.value) {
       checkoutInput.value = '';
@@ -124,20 +149,14 @@ async function handleStripeCheckout(data) {
   const form = document.getElementById('booking-form-container');
   if (form) form.remove();
 
-  // Create checkout container
-  const checkoutContainer = document.createElement('div');
-  checkoutContainer.id = 'stripe-checkout-container';
-  checkoutContainer.innerHTML = `
-    <div>
+  const checkoutHTML = `
+    <div class="stripe-checkout-wrapper">
       <div id="checkout-element"></div>
     </div>
   `;
 
-  // Find the chat area and append
-  const chatArea = document.querySelector('#chat-container');
-  if (chatArea) {
-    chatArea.appendChild(checkoutContainer);
-  }
+  const widget = injectInlineWidget('stripe-checkout-container', checkoutHTML);
+  if (!widget) return;
 
   // Initialize Stripe embedded checkout
   const stripe = await getStripe();

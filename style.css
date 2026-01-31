@@ -298,19 +298,36 @@ openai-chatkit {
   align-self: center;
 }
 
+/* Inline chat widgets */
+.chatkit-inline-widget {
+  margin: 0.75rem 0;
+  padding: 0 1rem;
+  max-width: 85%;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Booking form */
 #booking-form-container {
-  margin: 1rem 0;
-  width: 100%;
-  max-width: 100%;
+  margin: 0.75rem 0;
 }
 
 .booking-form {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .booking-form h3 {
@@ -390,17 +407,15 @@ openai-chatkit {
 
 /* Stripe checkout container */
 #stripe-checkout-container {
-  margin: 1rem 0;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+  margin: 0.75rem 0;
 }
 
-#stripe-checkout-container > div {
-  background: var(--color-warm-white);
+.stripe-checkout-wrapper {
+  background: white;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -413,9 +428,19 @@ openai-chatkit {
 
 /* Mobile: tighter padding */
 @media (max-width: 640px) {
-  #stripe-checkout-container > div {
-    padding: 0.75rem;
-    border-radius: 8px;
+  .chatkit-inline-widget {
+    max-width: 95%;
+    padding: 0 0.5rem;
+  }
+
+  .stripe-checkout-wrapper {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .booking-form {
+    padding: 1rem;
+    border-radius: 12px;
   }
 }
 
