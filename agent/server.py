@@ -73,7 +73,7 @@ def create_stripe_checkout_tool(
 
 def create_booking_agent():
     return Agent[AgentContext[dict[str, Any]]](
-        model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         name="Dakota Country Home",
         instructions=BOOKING_INSTRUCTIONS,
         tools=[get_availability_tool, get_quote_tool, create_stripe_checkout_tool],
@@ -108,9 +108,14 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             result = Runner.run_streamed(self.agent, input_items, context=agent_context)
             print(f"[respond] Got streaming result")
 
-            async for event in stream_agent_response(agent_context, result):
-                print(f"[respond] Yielding event type: {type(event)}")
-                yield event
+            try:
+                async for event in stream_agent_response(agent_context, result):
+                    print(f"[respond] Yielding event type: {type(event)}")
+                    yield event
+            except Exception as stream_error:
+                print(f"[respond] Stream error: {stream_error}")
+                print(traceback.format_exc())
+                raise
 
             print(f"[respond] Done")
         except Exception as e:
