@@ -13,7 +13,7 @@ from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
@@ -85,22 +85,13 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        try:
-            items_page = await self.store.load_thread_items(thread.id, None, 50, "desc", context)
-            items = list(reversed(items_page.data))
-            print(f"[DEBUG] Items for thread {thread.id}: {len(items)}")
+        items_page = await self.store.load_thread_items(
+            thread.id, after=None, limit=20, order="asc", context=context
+        )
+        input_items = await simple_to_agent_input(items_page.data)
 
-            agent_input = await simple_to_agent_input(items)
-            print(f"[DEBUG] Agent input: {agent_input}")
+        agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
+        result = Runner.run_streamed(booking_agent, input_items, context=agent_context)
 
-            agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-            result = Runner.run_streamed(booking_agent, agent_input, context=agent_context)
-            print(f"[DEBUG] Got streaming result")
-
-            async for event in stream_agent_response(agent_context, result):
-                yield event
-        except Exception as e:
-            import traceback
-            print(f"[ERROR] respond failed: {e}")
-            print(traceback.format_exc())
-            raise
+        async for event in stream_agent_response(agent_context, result):
+            yield event
