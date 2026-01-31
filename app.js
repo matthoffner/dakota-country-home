@@ -98,14 +98,15 @@ async function initChatKit() {
     },
     composer: {
       placeholder: 'Ask about the property or book your stay...'
-    },
-    effects: {
-      onEffect: async (effect) => {
-        console.log('Received effect:', effect);
-        if (effect.name === 'stripe_checkout') {
-          await handleStripeCheckout(effect.data);
-        }
-      }
+    }
+  });
+
+  // Listen for client effects via DOM event
+  chatkit.addEventListener('chatkit.effect', async (event) => {
+    const { name, data } = event.detail;
+    console.log('Received effect:', name, data);
+    if (name === 'stripe_checkout') {
+      await handleStripeCheckout(data);
     }
   });
 
