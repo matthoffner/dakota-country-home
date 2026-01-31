@@ -14,30 +14,63 @@
   <script src="https://js.stripe.com/v3/" async></script>
 </head>
 <body>
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <p class="hero-tagline">A countryside retreat</p>
-      <h1>Dakota Country Home</h1>
-      <p class="hero-description">
-        Nestled in the rolling hills of Dakota, our farmhouse offers the perfect escape.
-        Wake up to open skies, gather around the firepit, and make memories that last.
-      </p>
-      <div class="hero-details">
-        <span class="detail"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg> Sleeps 10</span>
-        <span class="detail"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg> 4 Bedrooms</span>
-        <span class="detail"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg> Rural Dakota</span>
+  <!-- Hero Slideshow -->
+  <section class="hero-slideshow">
+    <div class="slides">
+      <div class="slide active" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/94E7F868-2060-41B3-8AA1-636084750C3F.jpeg/:/rs=w:1920,h:1080,fit')">
+        <div class="slide-overlay first-slide">
+          <p class="hero-tagline">A countryside retreat</p>
+          <h1>Dakota Country Home</h1>
+          <p class="hero-description">
+            A 1916 farmhouse nestled in the rolling hills of South Dakota.
+            Wake up to open skies and breathtaking views of the Missouri River countryside.
+          </p>
+          <div class="hero-details">
+            <span class="detail">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+              Sleeps 10
+            </span>
+            <span class="detail">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+              8 Bedrooms
+            </span>
+            <span class="detail">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+              Yankton, SD
+            </span>
+          </div>
+        </div>
       </div>
-      <a href="#chat" class="scroll-cta">
-        <span>Plan your stay</span>
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-      </a>
+      <div class="slide" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/72EBA320-5B3E-4FBF-AAE4-0BAFBF3F5330.jpeg/:/rs=w:1920,h:1080,fit')"></div>
+      <div class="slide" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/ACBC63CB-5AEA-48DD-B3C7-5805293A503A.jpeg/:/rs=w:1920,h:1080,fit')"></div>
+      <div class="slide" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/433C2D82-6539-45AF-B510-0A0557993D2B.jpeg/:/rs=w:1920,h:1080,fit')"></div>
+      <div class="slide" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/C609E631-7260-466E-BBAB-DA092760F798.jpeg/:/rs=w:1920,h:1080,fit')"></div>
+      <div class="slide" style="background-image: url('https://img1.wsimg.com/isteam/ip/1a8bae6b-258c-492d-9a4d-a134a97de2e4/D0B68DA7-B1EA-4A65-9D71-0E6C2506A8B4.jpeg/:/rs=w:1920,h:1080,fit')"></div>
     </div>
-    <div class="hero-image">
-      <div class="image-placeholder">
-        <svg width="80" height="80" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" opacity="0.4"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-      </div>
+
+    <!-- Navigation Arrows -->
+    <button class="slide-nav prev" aria-label="Previous image">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button class="slide-nav next" aria-label="Next image">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+
+    <!-- Dots -->
+    <div class="slide-dots">
+      <button class="dot active" data-slide="0"></button>
+      <button class="dot" data-slide="1"></button>
+      <button class="dot" data-slide="2"></button>
+      <button class="dot" data-slide="3"></button>
+      <button class="dot" data-slide="4"></button>
+      <button class="dot" data-slide="5"></button>
     </div>
+
+    <!-- Scroll CTA -->
+    <a href="#chat" class="scroll-cta">
+      <span>Book Your Stay</span>
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+    </a>
   </section>
 
   <!-- Chat Section -->
@@ -45,6 +78,7 @@
     <div id="chat-container"></div>
   </section>
 
+  <script src="/slideshow.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

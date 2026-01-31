@@ -32,66 +32,97 @@ body {
   line-height: 1.6;
 }
 
-/* ===== HERO SECTION ===== */
-.hero {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr;
-  background: linear-gradient(135deg, var(--color-cream) 0%, #F5F0E8 100%);
+/* ===== HERO SLIDESHOW ===== */
+.hero-slideshow {
   position: relative;
+  height: 100vh;
+  width: 100%;
   overflow: hidden;
+  background: #1a1a1a;
 }
 
-.hero::before {
-  content: '';
+.slides {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.slide {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-image:
-    radial-gradient(circle at 20% 80%, rgba(125, 132, 113, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(139, 115, 85, 0.06) 0%, transparent 50%);
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
 }
 
-.hero-content {
+.slide.active {
+  opacity: 1;
+}
+
+/* Dark overlay for all slides */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.1) 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+}
+
+/* Text overlay on first slide */
+.slide-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 3rem 2rem;
-  max-width: 700px;
-  margin: 0 auto;
+  align-items: center;
   text-align: center;
-  position: relative;
-  z-index: 1;
+  padding: 2rem;
+  color: white;
+}
+
+.slide-overlay.first-slide {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
 }
 
 .hero-tagline {
   font-size: 0.875rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--color-sage);
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 1rem;
   font-weight: 500;
 }
 
-.hero h1 {
+.slide-overlay h1 {
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-size: clamp(2.5rem, 8vw, 5rem);
   font-weight: 600;
-  color: var(--color-charcoal);
   line-height: 1.1;
   margin-bottom: 1.5rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .hero-description {
   font-size: 1.125rem;
-  color: var(--color-text-light);
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto 2rem;
   font-weight: 300;
   line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .hero-details {
@@ -99,7 +130,6 @@ body {
   justify-content: center;
   gap: 2rem;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
 }
 
 .detail {
@@ -107,29 +137,109 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9375rem;
-  color: var(--color-text);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 400;
 }
 
 .detail svg {
-  color: var(--color-sage);
+  opacity: 0.85;
 }
 
+/* Navigation arrows */
+.slide-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.slide-nav:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.slide-nav.prev {
+  left: 1.5rem;
+}
+
+.slide-nav.next {
+  right: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .slide-nav {
+    width: 40px;
+    height: 40px;
+  }
+  .slide-nav.prev { left: 1rem; }
+  .slide-nav.next { right: 1rem; }
+}
+
+/* Dots navigation */
+.slide-dots {
+  position: absolute;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
+  z-index: 10;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dot:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dot.active {
+  background: white;
+  border-color: white;
+}
+
+/* Scroll CTA */
 .scroll-cta {
-  display: inline-flex;
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--color-brown);
+  gap: 0.5rem;
+  color: white;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  letter-spacing: 0.05em;
   transition: all 0.3s ease;
-  margin-top: auto;
+  z-index: 10;
 }
 
 .scroll-cta:hover {
-  color: var(--color-brown-dark);
+  transform: translateX(-50%) translateY(-2px);
 }
 
 .scroll-cta svg {
@@ -138,51 +248,8 @@ body {
 
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(8px); }
-  60% { transform: translateY(4px); }
-}
-
-.hero-image {
-  display: none;
-}
-
-.image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(145deg, #E8E4DC 0%, #D9D3C7 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Desktop hero layout */
-@media (min-width: 900px) {
-  .hero {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .hero-content {
-    text-align: left;
-    padding: 4rem;
-    margin: 0;
-    max-width: none;
-  }
-
-  .hero-description {
-    margin: 0 0 2rem;
-  }
-
-  .hero-details {
-    justify-content: flex-start;
-  }
-
-  .scroll-cta {
-    align-self: flex-start;
-  }
-
-  .hero-image {
-    display: block;
-  }
+  40% { transform: translateY(6px); }
+  60% { transform: translateY(3px); }
 }
 
 /* ===== CHAT SECTION ===== */
@@ -190,18 +257,6 @@ body {
   min-height: 100vh;
   background: var(--color-warm-white);
   position: relative;
-}
-
-.chat-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, var(--color-cream), transparent);
-  pointer-events: none;
-  z-index: 1;
 }
 
 #chat-container {
