@@ -85,13 +85,26 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        items_page = await self.store.load_thread_items(
-            thread.id, after=None, limit=20, order="asc", context=context
-        )
-        input_items = await simple_to_agent_input(items_page.data)
+        import traceback
+        try:
+            print(f"[respond] Starting for thread {thread.id}")
+            items_page = await self.store.load_thread_items(
+                thread.id, after=None, limit=20, order="asc", context=context
+            )
+            print(f"[respond] Got {len(items_page.data)} items")
+            input_items = await simple_to_agent_input(items_page.data)
+            print(f"[respond] Input items: {input_items}")
 
-        agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-        result = Runner.run_streamed(self.agent, input_items, context=agent_context)
+            agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
+            print(f"[respond] Running agent with model {self.agent.model}")
+            result = Runner.run_streamed(self.agent, input_items, context=agent_context)
+            print(f"[respond] Got result, streaming...")
 
-        async for event in stream_agent_response(agent_context, result):
-            yield event
+            async for event in stream_agent_response(agent_context, result):
+                print(f"[respond] Event: {type(event)}")
+                yield event
+            print(f"[respond] Done streaming")
+        except Exception as e:
+            print(f"[respond] ERROR: {e}")
+            print(traceback.format_exc())
+            raise
