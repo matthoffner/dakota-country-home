@@ -19,35 +19,16 @@ async function getStripe() {
   return stripeInstance;
 }
 
-// Find the messages container within ChatKit to inject inline content
-function getMessagesContainer() {
-  if (!chatkitElement) return null;
-
-  // Try shadow DOM first
-  const shadow = chatkitElement.shadowRoot;
-  if (shadow) {
-    // Look for common message container patterns
-    const container = shadow.querySelector('[class*="messages"]') ||
-                      shadow.querySelector('[class*="thread"]') ||
-                      shadow.querySelector('[class*="conversation"]') ||
-                      shadow.querySelector('main') ||
-                      shadow.querySelector('[role="log"]');
-    if (container) return container;
-  }
-
-  // Fallback to ChatKit element itself
-  return chatkitElement;
-}
-
-// Inject content inline in the chat, styled as an assistant message
+// Inject widget below the ChatKit element (ChatKit uses iframe so we can't inject inside)
 function injectInlineWidget(id, content) {
   // Remove existing widget with same id
   const existing = document.getElementById(id);
   if (existing) existing.remove();
 
-  const container = getMessagesContainer();
-  if (!container) {
-    console.warn('Could not find messages container');
+  // Find the chat container
+  const chatContainer = document.getElementById('chat-container');
+  if (!chatContainer) {
+    console.warn('Could not find chat container');
     return null;
   }
 
@@ -56,11 +37,15 @@ function injectInlineWidget(id, content) {
   wrapper.className = 'chatkit-inline-widget';
   wrapper.innerHTML = content;
 
-  // Insert at the end of messages
-  container.appendChild(wrapper);
+  // Insert after the chatkit element
+  if (chatkitElement && chatkitElement.nextSibling) {
+    chatContainer.insertBefore(wrapper, chatkitElement.nextSibling);
+  } else {
+    chatContainer.appendChild(wrapper);
+  }
 
   // Scroll to the widget
-  wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
   return wrapper;
 }
