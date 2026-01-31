@@ -7,11 +7,7 @@ async function initChatKit() {
   const container = document.getElementById('chat-container');
   const chatkit = document.createElement('openai-chatkit');
 
-  chatkit.setOptions({
-    api: {
-      url: '/api/chatkit'
-    }
-  });
+  chatkit.setAttribute('agent', '/api/chatkit');
 
   container.appendChild(chatkit);
 }
