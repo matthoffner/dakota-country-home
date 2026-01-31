@@ -6,7 +6,7 @@ from typing import Any, AsyncIterator
 from agents import Agent, Runner
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
-from chatkit.types import ThreadMetadata, ThreadStreamEvent, UserMessageItem
+from chatkit.types import ThreadMetadata, ThreadStreamEvent, UserMessageItem, AssistantMessageItem, OutputText
 
 from .store import BookingStore
 from .tools.availability import check_availability
@@ -85,20 +85,25 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        from chatkit.types import AssistantMessageDoneEvent, AssistantMessageItem, OutputText
         import uuid
         from datetime import datetime
 
-        # Simple hardcoded response for testing
-        msg_id = f"msg_{uuid.uuid4().hex[:8]}"
-        response_text = "Hello! Welcome to Dakota Country Home. I'm here to help you book your stay. When are you planning to visit?"
+        try:
+            # Simple hardcoded response for testing
+            msg_id = f"msg_{uuid.uuid4().hex[:8]}"
+            response_text = "Hello! Welcome to Dakota Country Home. I'm here to help you book your stay. When are you planning to visit?"
 
-        msg = AssistantMessageItem(
-            id=msg_id,
-            thread_id=thread.id,
-            created_at=datetime.utcnow().isoformat(),
-            content=[OutputText(type="output_text", text=response_text)],
-        )
+            msg = AssistantMessageItem(
+                id=msg_id,
+                thread_id=thread.id,
+                created_at=datetime.utcnow().isoformat(),
+                content=[OutputText(type="output_text", text=response_text)],
+            )
 
-        await self.store.add_thread_item(thread.id, msg, context)
-        yield AssistantMessageDoneEvent(type="thread.item.done", item=msg)
+            await self.store.add_thread_item(thread.id, msg, context)
+            yield {"type": "thread.item.done", "item": msg}
+        except Exception as e:
+            import traceback
+            print(f"[respond] Error: {e}")
+            print(traceback.format_exc())
+            raise
