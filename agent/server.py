@@ -85,26 +85,20 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        import traceback
-        try:
-            print(f"[respond] Starting for thread {thread.id}")
-            items_page = await self.store.load_thread_items(
-                thread.id, after=None, limit=20, order="asc", context=context
-            )
-            print(f"[respond] Got {len(items_page.data)} items")
-            input_items = await simple_to_agent_input(items_page.data)
-            print(f"[respond] Input items: {input_items}")
+        from chatkit.types import AssistantMessageDoneEvent, AssistantMessageItem, OutputText
+        import uuid
+        from datetime import datetime
 
-            agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-            print(f"[respond] Running agent with model {self.agent.model}")
-            result = Runner.run_streamed(self.agent, input_items, context=agent_context)
-            print(f"[respond] Got result, streaming...")
+        # Simple hardcoded response for testing
+        msg_id = f"msg_{uuid.uuid4().hex[:8]}"
+        response_text = "Hello! Welcome to Dakota Country Home. I'm here to help you book your stay. When are you planning to visit?"
 
-            async for event in stream_agent_response(agent_context, result):
-                print(f"[respond] Event: {type(event)}")
-                yield event
-            print(f"[respond] Done streaming")
-        except Exception as e:
-            print(f"[respond] ERROR: {e}")
-            print(traceback.format_exc())
-            raise
+        msg = AssistantMessageItem(
+            id=msg_id,
+            thread_id=thread.id,
+            created_at=datetime.utcnow().isoformat(),
+            content=[OutputText(type="output_text", text=response_text)],
+        )
+
+        await self.store.add_thread_item(thread.id, msg, context)
+        yield AssistantMessageDoneEvent(type="thread.item.done", item=msg)
