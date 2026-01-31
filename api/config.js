@@ -10,8 +10,8 @@ export default function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
 
   return res.status(200).json({
-    // URL to the self-hosted ChatKit backend
-    chatkitUrl: process.env.CHATKIT_URL || null,
+    // URL to the ChatKit backend (same domain on Vercel)
+    chatkitUrl: process.env.CHATKIT_URL || '/api/chatkit',
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
   });
 }
