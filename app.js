@@ -13,7 +13,7 @@ async function initChatKit() {
   chatkit.setOptions({
     api: {
       url: '/api/chatkit',
-      domainKey: 'domain_pk_localhost_dev'
+      domainKey: 'dakota-country-home.vercel.app'
     }
   });
 
