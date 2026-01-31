@@ -92,34 +92,19 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        import traceback
-        try:
-            items_page = await self.store.load_thread_items(
-                thread.id, after=None, limit=20, order="asc", context=context
-            )
-            print(f"[respond] Loaded {len(items_page.data)} items")
+        # Load items in desc order and reverse (most recent last)
+        items_page = await self.store.load_thread_items(
+            thread.id, after=None, limit=20, order="desc", context=context
+        )
+        items = list(reversed(items_page.data))
 
-            input_items = await simple_to_agent_input(items_page.data)
-            print(f"[respond] Converted to agent input: {input_items[:100] if input_items else 'empty'}...")
+        # Convert to agent input format
+        input_items = await simple_to_agent_input(items)
 
-            agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-            print(f"[respond] Created agent context, running agent...")
+        # Create agent context and run
+        agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
+        result = Runner.run_streamed(self.agent, input_items, context=agent_context)
 
-            result = Runner.run_streamed(self.agent, input_items, context=agent_context)
-            print(f"[respond] Got streaming result")
-
-            try:
-                async for event in stream_agent_response(agent_context, result):
-                    print(f"[respond] Yielding event type: {type(event)}")
-                    yield event
-            except Exception as stream_error:
-                print(f"[respond] Stream error: {stream_error}")
-                print(traceback.format_exc())
-                raise
-
-            print(f"[respond] Done")
-        except Exception as e:
-            print(f"[respond] ERROR: {e}")
-            print(traceback.format_exc())
-            # Re-raise to let ChatKit handle it
-            raise
+        # Stream the response
+        async for event in stream_agent_response(agent_context, result):
+            yield event
