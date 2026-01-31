@@ -12,16 +12,12 @@ from chatkit.types import (
     ThreadStreamEvent,
     UserMessageItem,
     ClientEffectEvent,
-    WidgetItem,
-    WidgetStreamEvent,
 )
-from chatkit.widgets import stream_widget
 
 from .store import BookingStore
 from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
-from .widgets import build_booking_form
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
@@ -54,19 +50,20 @@ async def show_booking_form(
     ctx: RunContextWrapper[AgentContext],
 ) -> str:
     """Display interactive booking form widget."""
-    widget = build_booking_form()
+    from datetime import date, timedelta
+    min_date = (date.today() + timedelta(days=1)).isoformat()
 
-    # Stream the widget to the chat
-    async for event in stream_widget(
-        ctx.context.thread,
-        widget,
-        generate_id=lambda item_type: ctx.context.store.generate_item_id(
-            item_type, ctx.context.thread, ctx.context.request_context
-        ),
-    ):
-        await ctx.context.stream(event)
+    # Send client effect to render the booking form
+    await ctx.context.stream(
+        ClientEffectEvent(
+            name="booking_form",
+            data={
+                "min_date": min_date,
+            },
+        )
+    )
 
-    return "Booking form displayed. Please fill in your check-in date, check-out date, number of guests, and email, then click 'Check Availability'."
+    return "Booking form displayed. Please fill in your dates, number of guests, and email."
 
 
 @function_tool(description_override="Check if dates are available for booking. start_date and end_date should be in YYYY-MM-DD format.")
