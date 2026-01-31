@@ -6,7 +6,14 @@ from typing import Any, AsyncIterator
 from agents import Agent, Runner
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
-from chatkit.types import ThreadMetadata, ThreadStreamEvent, UserMessageItem, AssistantMessageItem, OutputText
+from chatkit.types import (
+    ThreadMetadata,
+    ThreadStreamEvent,
+    UserMessageItem,
+    AssistantMessageItem,
+    AssistantMessageContent,
+    ThreadItemDoneEvent,
+)
 
 from .store import BookingStore
 from .tools.availability import check_availability
@@ -97,11 +104,11 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
                 id=msg_id,
                 thread_id=thread.id,
                 created_at=datetime.utcnow().isoformat(),
-                content=[OutputText(type="output_text", text=response_text)],
+                content=[AssistantMessageContent(type="output_text", text=response_text)],
             )
 
             await self.store.add_thread_item(thread.id, msg, context)
-            yield {"type": "thread.item.done", "item": msg}
+            yield ThreadItemDoneEvent(type="thread.item.done", item=msg)
         except Exception as e:
             import traceback
             print(f"[respond] Error: {e}")
