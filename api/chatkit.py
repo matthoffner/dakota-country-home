@@ -34,36 +34,30 @@ def get_server():
 
 
 @app.get("/api/chatkit")
-async def health():
+async def health(test: str = None):
+    if test == "agent":
+        import traceback
+        try:
+            server = get_server()
+            agent = server.agent
+            return {
+                "status": "ok",
+                "agent_name": agent.name,
+                "agent_model": agent.model,
+                "num_tools": len(agent.tools) if agent.tools else 0,
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }
+
     return {
         "status": "ok",
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
         "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
     }
-
-
-@app.get("/api/chatkit/test-agent")
-async def test_agent():
-    """Test agent directly to debug issues"""
-    import traceback
-    try:
-        from agent.server import BookingChatServer
-        server = BookingChatServer()
-
-        # Test agent creation
-        agent = server.agent
-        return {
-            "status": "ok",
-            "agent_name": agent.name,
-            "agent_model": agent.model,
-            "num_tools": len(agent.tools) if agent.tools else 0,
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
 
 
 @app.post("/api/chatkit")
