@@ -1,21 +1,15 @@
 """ChatKit server for Dakota Country Home booking agent."""
 
 import os
-from datetime import datetime
 from typing import Any, AsyncIterator
 
 from agents import Agent, Runner, function_tool, RunContextWrapper
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
 from chatkit.types import (
-    Action,
     ThreadMetadata,
     ThreadStreamEvent,
     UserMessageItem,
-    WidgetItem,
-    AssistantMessageItem,
-    AssistantMessageContent,
-    ThreadItemDoneEvent,
     ClientEffectEvent,
 )
 
@@ -23,7 +17,6 @@ from .store import BookingStore
 from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
-from .widgets.booking_widget import build_booking_widget
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
