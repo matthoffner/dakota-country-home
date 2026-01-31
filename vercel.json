@@ -1,7 +1,1 @@
-{
-  "functions": {
-    "api/chatkit.py": {
-      "maxDuration": 60
-    }
-  }
-}
+{}
