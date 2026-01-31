@@ -1,9 +1,7 @@
 /**
  * Dakota Country Home - ChatKit Booking
- * Connects to self-hosted agent on Render
+ * All on Vercel - frontend + Python agent
  */
-
-const CHATKIT_URL = 'https://dakota-booking-agent.onrender.com/chatkit';
 
 async function initChatKit() {
   const container = document.getElementById('chat-container');
@@ -11,7 +9,7 @@ async function initChatKit() {
 
   chatkit.setOptions({
     api: {
-      url: CHATKIT_URL
+      url: '/api/chatkit'
     }
   });
 
