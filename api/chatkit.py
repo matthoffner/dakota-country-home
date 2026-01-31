@@ -73,7 +73,8 @@ async def health(test: str = None):
     return {
         "status": "ok",
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
-        "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+        "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        "stripe_publishable_key": os.getenv("STRIPE_PUBLISHABLE_KEY"),
     }
 
 

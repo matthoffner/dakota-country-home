@@ -1,17 +1,29 @@
 """ChatKit server for Dakota Country Home booking agent."""
 
 import os
+from datetime import datetime
 from typing import Any, AsyncIterator
 
-from agents import Agent, Runner, function_tool
+from agents import Agent, Runner, function_tool, RunContextWrapper
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
-from chatkit.types import ThreadMetadata, ThreadStreamEvent, UserMessageItem
+from chatkit.types import (
+    Action,
+    ThreadMetadata,
+    ThreadStreamEvent,
+    UserMessageItem,
+    WidgetItem,
+    AssistantMessageItem,
+    AssistantMessageContent,
+    ThreadItemDoneEvent,
+    ClientEffectEvent,
+)
 
 from .store import BookingStore
 from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
+from .widgets.booking_widget import build_booking_widget
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
@@ -23,8 +35,8 @@ Guide guests through booking their stay. Ask one question at a time. Be concise 
 1. Greet and ask about their trip (dates, number of guests)
 2. Check availability using get_availability tool
 3. If available, get quote using get_quote tool
-4. Show quote and ask for email
-5. Create checkout using create_stripe_checkout tool
+4. Ask for their email address for the booking confirmation
+5. Once you have the email, use show_payment_form to display the credit card form
 
 ## Property Details
 - Sleeps up to 10 guests
@@ -35,6 +47,8 @@ Guide guests through booking their stay. Ask one question at a time. Be concise 
 ## Rules
 - Never invent availability or prices - always use the tools
 - If unavailable, suggest nearby dates
+- You MUST collect the customer's email before showing the payment form
+- After getting email, IMMEDIATELY call show_payment_form to display the embedded payment form
 - Keep responses concise
 """
 
@@ -51,20 +65,45 @@ def get_quote(start_date: str, end_date: str, guests: int) -> dict:
     return calculate_quote(start_date, end_date, guests)
 
 
-@function_tool(description_override="Create a Stripe checkout session for payment. amount_cents is the total in cents, customer_email is the guest's email.")
-def create_checkout(
-    amount_cents: int,
+@function_tool(description_override="Show the embedded Stripe payment form in the chat. Call this after getting a quote and collecting the customer's email.")
+async def show_payment_form(
+    ctx: RunContextWrapper[AgentContext],
     customer_email: str,
     start_date: str,
     end_date: str,
-    guests: int
-) -> dict:
-    """Create Stripe checkout for payment."""
-    return create_checkout_session(
-        amount_cents=amount_cents,
+    guests: int,
+    total_cents: int,
+) -> str:
+    """Display embedded Stripe payment form."""
+    # Create Stripe checkout session
+    result = create_checkout_session(
+        amount_cents=total_cents,
         customer_email=customer_email,
-        metadata={"start_date": start_date, "end_date": end_date, "guests": str(guests)},
+        metadata={
+            "start_date": start_date,
+            "end_date": end_date,
+            "guests": str(guests),
+        },
     )
+
+    if result.get("error"):
+        return f"Payment error: {result['error']}"
+
+    # Send client effect to render Stripe Elements
+    await ctx.context.stream(
+        ClientEffectEvent(
+            name="stripe_checkout",
+            data={
+                "client_secret": result["client_secret"],
+                "total_cents": total_cents,
+                "start_date": start_date,
+                "end_date": end_date,
+                "guests": guests,
+            },
+        )
+    )
+
+    return "Payment form displayed. Please complete payment."
 
 
 def create_booking_agent():
@@ -72,7 +111,7 @@ def create_booking_agent():
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         name="Dakota Country Home",
         instructions=BOOKING_INSTRUCTIONS,
-        tools=[get_availability, get_quote, create_checkout],
+        tools=[get_availability, get_quote, show_payment_form],
     )
 
 
