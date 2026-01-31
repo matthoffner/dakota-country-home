@@ -1,0 +1,16 @@
+{
+  "name": "dakota-country-home",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chat-only booking website for Dakota Country Home",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

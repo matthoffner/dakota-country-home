@@ -1,0 +1,16 @@
+# OpenAI ChatKit and Agents SDK
+openai-chatkit>=0.1.0
+openai-agents>=0.1.0
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# iCal parsing for Airbnb availability
+icalendar>=5.0.0
+
+# Stripe payments
+stripe>=10.0.0
+
+# HTTP client
+httpx>=0.27.0
