@@ -4,10 +4,18 @@
  */
 
 async function initChatKit() {
+  // Wait for ChatKit custom element to be defined
+  await customElements.whenDefined('openai-chatkit');
+
   const container = document.getElementById('chat-container');
   const chatkit = document.createElement('openai-chatkit');
 
-  chatkit.setAttribute('agent', '/api/chatkit');
+  chatkit.setOptions({
+    api: {
+      url: '/api/chatkit',
+      domainKey: 'dakota-country-home'
+    }
+  });
 
   container.appendChild(chatkit);
 }
