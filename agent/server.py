@@ -13,8 +13,6 @@ from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
 
@@ -66,17 +64,19 @@ def create_stripe_checkout_tool(
     )
 
 
-booking_agent = Agent[AgentContext[dict[str, Any]]](
-    model=MODEL,
-    name="Dakota Country Home",
-    instructions=BOOKING_INSTRUCTIONS,
-    tools=[get_availability_tool, get_quote_tool, create_stripe_checkout_tool],
-)
+def create_booking_agent():
+    return Agent[AgentContext[dict[str, Any]]](
+        model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+        name="Dakota Country Home",
+        instructions=BOOKING_INSTRUCTIONS,
+        tools=[get_availability_tool, get_quote_tool, create_stripe_checkout_tool],
+    )
 
 
 class BookingChatServer(ChatKitServer[dict[str, Any]]):
     def __init__(self):
         self.store = BookingStore()
+        self.agent = create_booking_agent()
         super().__init__(self.store)
 
     async def respond(
@@ -91,7 +91,7 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         input_items = await simple_to_agent_input(items_page.data)
 
         agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-        result = Runner.run_streamed(booking_agent, input_items, context=agent_context)
+        result = Runner.run_streamed(self.agent, input_items, context=agent_context)
 
         async for event in stream_agent_response(agent_context, result):
             yield event
