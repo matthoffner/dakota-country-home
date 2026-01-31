@@ -53,6 +53,23 @@ async def health(test: str = None):
                 "traceback": traceback.format_exc()
             }
 
+    if test == "run":
+        import traceback
+        try:
+            from agents import Runner
+            server = get_server()
+            result = Runner.run_sync(server.agent, "Hello, I want to book a stay")
+            return {
+                "status": "ok",
+                "response": result.final_output if hasattr(result, 'final_output') else str(result),
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }
+
     return {
         "status": "ok",
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
