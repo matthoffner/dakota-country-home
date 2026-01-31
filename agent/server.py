@@ -72,7 +72,7 @@ def create_stripe_checkout_tool(
 
 
 def create_booking_agent():
-    return Agent[AgentContext[dict[str, Any]]](
+    return Agent(
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         name="Dakota Country Home",
         instructions=BOOKING_INSTRUCTIONS,
