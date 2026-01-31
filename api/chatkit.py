@@ -25,7 +25,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-chatkit_server = BookingChatServer()
+chatkit_server = None
+
+def get_server():
+    global chatkit_server
+    if chatkit_server is None:
+        chatkit_server = BookingChatServer()
+    return chatkit_server
 
 
 @app.get("/api/chatkit")
@@ -41,8 +47,9 @@ async def health():
 @app.post("/api/chatkit")
 async def chatkit(request: Request):
     try:
+        server = get_server()
         payload = await request.body()
-        result = await chatkit_server.process(payload, {"request": request})
+        result = await server.process(payload, {"request": request})
 
         if isinstance(result, StreamingResult):
             return StreamingResponse(result, media_type="text/event-stream")
