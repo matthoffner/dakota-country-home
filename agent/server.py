@@ -92,6 +92,9 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
+        import uuid
+        from datetime import datetime
+
         # Load items in desc order and reverse (most recent last)
         items_page = await self.store.load_thread_items(
             thread.id, after=None, limit=20, order="desc", context=context
@@ -101,10 +104,21 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         # Convert to agent input format
         input_items = await simple_to_agent_input(items)
 
-        # Create agent context and run
-        agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
-        result = Runner.run_streamed(self.agent, input_items, context=agent_context)
+        # Run the agent (non-streaming for now to debug)
+        try:
+            result = await Runner.run(self.agent, input_items)
+            response_text = result.final_output if hasattr(result, 'final_output') else str(result)
+        except Exception as e:
+            response_text = f"Error running agent: {e}"
 
-        # Stream the response
-        async for event in stream_agent_response(agent_context, result):
-            yield event
+        # Create response message
+        msg_id = f"msg_{uuid.uuid4().hex[:8]}"
+        msg = AssistantMessageItem(
+            id=msg_id,
+            thread_id=thread.id,
+            created_at=datetime.utcnow().isoformat(),
+            content=[AssistantMessageContent(type="output_text", text=response_text)],
+        )
+
+        await self.store.add_thread_item(thread.id, msg, context)
+        yield ThreadItemDoneEvent(type="thread.item.done", item=msg)
