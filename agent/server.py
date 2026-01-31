@@ -92,25 +92,13 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         item: UserMessageItem | None,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
-        import uuid
-        from datetime import datetime
+        items_page = await self.store.load_thread_items(
+            thread.id, after=None, limit=20, order="asc", context=context
+        )
+        input_items = await simple_to_agent_input(items_page.data)
 
-        try:
-            # Simple hardcoded response for testing
-            msg_id = f"msg_{uuid.uuid4().hex[:8]}"
-            response_text = "Hello! Welcome to Dakota Country Home. I'm here to help you book your stay. When are you planning to visit?"
+        agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
+        result = Runner.run_streamed(self.agent, input_items, context=agent_context)
 
-            msg = AssistantMessageItem(
-                id=msg_id,
-                thread_id=thread.id,
-                created_at=datetime.utcnow().isoformat(),
-                content=[AssistantMessageContent(type="output_text", text=response_text)],
-            )
-
-            await self.store.add_thread_item(thread.id, msg, context)
-            yield ThreadItemDoneEvent(type="thread.item.done", item=msg)
-        except Exception as e:
-            import traceback
-            print(f"[respond] Error: {e}")
-            print(traceback.format_exc())
-            raise
+        async for event in stream_agent_response(agent_context, result):
+            yield event
