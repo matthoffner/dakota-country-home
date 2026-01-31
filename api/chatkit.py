@@ -42,6 +42,30 @@ async def health():
     }
 
 
+@app.get("/api/chatkit/test-agent")
+async def test_agent():
+    """Test agent directly to debug issues"""
+    import traceback
+    try:
+        from agent.server import BookingChatServer
+        server = BookingChatServer()
+
+        # Test agent creation
+        agent = server.agent
+        return {
+            "status": "ok",
+            "agent_name": agent.name,
+            "agent_model": agent.model,
+            "num_tools": len(agent.tools) if agent.tools else 0,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 @app.post("/api/chatkit")
 async def chatkit(request: Request):
     try:
