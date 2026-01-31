@@ -3,7 +3,7 @@
 import os
 from typing import Any, AsyncIterator
 
-from agents import Agent, Runner
+from agents import Agent, Runner, function_tool
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
 from chatkit.types import (
@@ -46,24 +46,27 @@ Guide guests through booking their stay. Ask one question at a time. Be concise 
 """
 
 
-def get_availability_tool(start_date: str, end_date: str) -> dict:
-    """Check if dates are available. Args: start_date (YYYY-MM-DD), end_date (YYYY-MM-DD)"""
+@function_tool(description_override="Check if dates are available for booking. start_date and end_date should be in YYYY-MM-DD format.")
+def get_availability(start_date: str, end_date: str) -> dict:
+    """Check availability for the given dates."""
     return check_availability(start_date, end_date)
 
 
-def get_quote_tool(start_date: str, end_date: str, guests: int) -> dict:
-    """Get pricing quote. Args: start_date, end_date (YYYY-MM-DD), guests (number)"""
+@function_tool(description_override="Get a pricing quote for the stay. start_date and end_date should be in YYYY-MM-DD format, guests is the number of people.")
+def get_quote(start_date: str, end_date: str, guests: int) -> dict:
+    """Calculate price quote for the booking."""
     return calculate_quote(start_date, end_date, guests)
 
 
-def create_stripe_checkout_tool(
+@function_tool(description_override="Create a Stripe checkout session for payment. amount_cents is the total in cents, customer_email is the guest's email.")
+def create_checkout(
     amount_cents: int,
     customer_email: str,
     start_date: str,
     end_date: str,
     guests: int
 ) -> dict:
-    """Create Stripe checkout. Args: amount_cents, customer_email, start_date, end_date, guests"""
+    """Create Stripe checkout for payment."""
     return create_checkout_session(
         amount_cents=amount_cents,
         customer_email=customer_email,
@@ -76,7 +79,7 @@ def create_booking_agent():
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         name="Dakota Country Home",
         instructions=BOOKING_INSTRUCTIONS,
-        tools=[get_availability_tool, get_quote_tool, create_stripe_checkout_tool],
+        tools=[get_availability, get_quote, create_checkout],
     )
 
 
