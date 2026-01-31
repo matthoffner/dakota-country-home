@@ -7,29 +7,33 @@ from agents import Agent, Runner, function_tool, RunContextWrapper
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
 from chatkit.types import (
+    Action,
     ThreadMetadata,
     ThreadStreamEvent,
     UserMessageItem,
     ClientEffectEvent,
+    WidgetItem,
+    WidgetStreamEvent,
 )
+from chatkit.widgets import stream_widget
 
 from .store import BookingStore
 from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
+from .widgets import build_booking_form
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
 
 ## Your Role
-Guide guests through booking their stay. Ask one question at a time. Be concise but warm.
+Guide guests through booking their stay. Be concise but warm.
 
 ## Booking Flow
-1. Greet and ask about their trip (dates, number of guests)
-2. Check availability using get_availability tool
-3. If available, get quote using get_quote tool
-4. Ask for their email address for the booking confirmation
-5. Once you have the email, use show_payment_form to display the credit card form
+1. When user wants to book, IMMEDIATELY call show_booking_form to display the interactive form
+2. The form has date pickers and guest selector - wait for user to submit
+3. After form submission, check availability and show quote
+4. Once confirmed, use show_payment_form to display payment
 
 ## Property Details
 - Sleeps up to 10 guests
@@ -38,12 +42,31 @@ Guide guests through booking their stay. Ask one question at a time. Be concise 
 - Beautiful Dakota countryside
 
 ## Rules
+- ALWAYS use show_booking_form when user wants to book - don't ask for dates in text
 - Never invent availability or prices - always use the tools
 - If unavailable, suggest nearby dates
-- You MUST collect the customer's email before showing the payment form
-- After getting email, IMMEDIATELY call show_payment_form to display the embedded payment form
 - Keep responses concise
 """
+
+
+@function_tool(description_override="Show the interactive booking form with date pickers and guest selector. Call this when user wants to book a stay.")
+async def show_booking_form(
+    ctx: RunContextWrapper[AgentContext],
+) -> str:
+    """Display interactive booking form widget."""
+    widget = build_booking_form()
+
+    # Stream the widget to the chat
+    async for event in stream_widget(
+        ctx.context.thread,
+        widget,
+        generate_id=lambda item_type: ctx.context.store.generate_item_id(
+            item_type, ctx.context.thread, ctx.context.request_context
+        ),
+    ):
+        await ctx.context.stream(event)
+
+    return "Booking form displayed. Please fill in your check-in date, check-out date, number of guests, and email, then click 'Check Availability'."
 
 
 @function_tool(description_override="Check if dates are available for booking. start_date and end_date should be in YYYY-MM-DD format.")
@@ -104,7 +127,7 @@ def create_booking_agent():
         model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         name="Dakota Country Home",
         instructions=BOOKING_INSTRUCTIONS,
-        tools=[get_availability, get_quote, show_payment_form],
+        tools=[show_booking_form, get_availability, get_quote, show_payment_form],
     )
 
 
@@ -136,3 +159,102 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         # Stream the response
         async for event in stream_agent_response(agent_context, result):
             yield event
+
+    async def handle_action(
+        self,
+        thread: ThreadMetadata,
+        action: Action,
+        context: dict[str, Any],
+    ) -> AsyncIterator[ThreadStreamEvent]:
+        """Handle form submissions and widget actions."""
+        action_type = action.type
+
+        if action_type == "booking.check_availability":
+            # Extract form values
+            form_values = action.payload.get("formValues", {})
+            checkin = form_values.get("checkin", "")
+            checkout = form_values.get("checkout", "")
+            guests = form_values.get("guests", "")
+            email = form_values.get("email", "")
+
+            # Validate
+            if not all([checkin, checkout, guests, email]):
+                # Show error message
+                from chatkit.types import AssistantMessageItem, TextContent
+                yield AssistantMessageItem(
+                    id=self.store.generate_item_id("assistant_message", thread, context),
+                    content=[TextContent(text="Please fill in all fields: check-in date, check-out date, number of guests, and email.")],
+                )
+                return
+
+            # Check availability
+            availability = check_availability(checkin, checkout)
+
+            if not availability.get("available"):
+                from chatkit.types import AssistantMessageItem, TextContent
+                yield AssistantMessageItem(
+                    id=self.store.generate_item_id("assistant_message", thread, context),
+                    content=[TextContent(text=f"Sorry, those dates are not available. {availability.get('message', '')}")],
+                )
+                return
+
+            # Get quote
+            quote = calculate_quote(checkin, checkout, int(guests))
+
+            # Store booking info in thread metadata for later
+            thread_data = {
+                "checkin": checkin,
+                "checkout": checkout,
+                "guests": guests,
+                "email": email,
+                "quote": quote,
+            }
+
+            # Show quote and proceed to payment
+            from chatkit.types import AssistantMessageItem, TextContent
+            nights = quote.get("nights", 0)
+            total = quote.get("total_cents", 0) / 100
+
+            message = f"""Great news! Those dates are available.
+
+**Booking Summary:**
+- Check-in: {checkin}
+- Check-out: {checkout}
+- Guests: {guests}
+- Nights: {nights}
+- Total: ${total:.0f}
+
+I'll now show you the payment form to complete your booking."""
+
+            yield AssistantMessageItem(
+                id=self.store.generate_item_id("assistant_message", thread, context),
+                content=[TextContent(text=message)],
+            )
+
+            # Create Stripe checkout and send effect
+            stripe_result = create_checkout_session(
+                amount_cents=quote["total_cents"],
+                customer_email=email,
+                metadata={
+                    "start_date": checkin,
+                    "end_date": checkout,
+                    "guests": guests,
+                },
+            )
+
+            if not stripe_result.get("error"):
+                yield ClientEffectEvent(
+                    name="stripe_checkout",
+                    data={
+                        "client_secret": stripe_result["client_secret"],
+                        "total_cents": quote["total_cents"],
+                        "start_date": checkin,
+                        "end_date": checkout,
+                        "guests": int(guests),
+                    },
+                )
+
+        else:
+            # Unknown action, pass to parent
+            async for event in super().handle_action(thread, action, context):
+                yield event
