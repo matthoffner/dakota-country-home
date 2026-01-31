@@ -54,51 +54,7 @@ async function initChatKit() {
       url: '/api/chatkit',
       domainKey: 'domain_pk_697e463b99c88193ab7306989319aad80d6a6d26fd06e5e1'
     },
-    theme: {
-      colorScheme: 'light',
-      radius: 'soft',
-      density: 'normal',
-      accentColor: {
-        primary: '#7D8471',  // Sage green
-        level: 1
-      },
-      grayscale: {
-        hue: 35,  // Warm brown undertone
-        tint: 2,
-        shade: 0
-      }
-    },
-    header: {
-      enabled: false
-    },
-    startScreen: {
-      greeting: 'Welcome to Dakota Country Home',
-      prompts: [
-        {
-          label: 'Book a stay',
-          content: "I'd like to book a stay at the farmhouse",
-          icon: 'calendar'
-        },
-        {
-          label: 'What amenities?',
-          content: 'What amenities does the property have?',
-          icon: 'lightbulb'
-        },
-        {
-          label: 'Check availability',
-          content: 'Is the property available next weekend?',
-          icon: 'search'
-        },
-        {
-          label: 'Pricing info',
-          content: 'How much does it cost per night?',
-          icon: 'sparkles'
-        }
-      ]
-    },
-    composer: {
-      placeholder: 'Ask about the property or book your stay...'
-    }
+    theme: 'light'
   });
 
   // Listen for client effects via DOM event
