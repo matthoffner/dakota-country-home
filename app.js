@@ -25,7 +25,7 @@ async function handleStripeCheckout(data) {
   const checkoutContainer = document.createElement('div');
   checkoutContainer.id = 'stripe-checkout-container';
   checkoutContainer.innerHTML = `
-    <div style="padding: 24px; background: #FFFDF9; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; margin: 16px 0;">
+    <div>
       <div id="checkout-element"></div>
     </div>
   `;
