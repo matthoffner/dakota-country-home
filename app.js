@@ -1,6 +1,9 @@
 /**
  * Dakota Country Home - ChatKit Booking
  * All on Vercel - frontend + Python agent with Stripe embedded checkout
+ *
+ * Booking form is rendered inline via ChatKit widgets.
+ * Stripe checkout uses client effects since it's a third-party embed.
  */
 
 let stripeInstance = null;
@@ -19,10 +22,11 @@ async function getStripe() {
   return stripeInstance;
 }
 
-// Inject widget below the ChatKit element (ChatKit uses iframe so we can't inject inside)
-function injectInlineWidget(id, content) {
-  // Remove existing widget with same id
-  const existing = document.getElementById(id);
+// Inject Stripe checkout below the ChatKit element
+// (Stripe is a third-party embed that can't be rendered as a ChatKit widget)
+function injectStripeWidget(content) {
+  // Remove existing checkout if any
+  const existing = document.getElementById('stripe-checkout-container');
   if (existing) existing.remove();
 
   // Find the chat container
@@ -33,7 +37,7 @@ function injectInlineWidget(id, content) {
   }
 
   const wrapper = document.createElement('div');
-  wrapper.id = id;
+  wrapper.id = 'stripe-checkout-container';
   wrapper.className = 'chatkit-inline-widget';
   wrapper.innerHTML = content;
 
@@ -50,89 +54,8 @@ function injectInlineWidget(id, content) {
   return wrapper;
 }
 
-function handleBookingForm(data) {
-  const { min_date } = data;
-
-  const formHTML = `
-    <div class="booking-form">
-      <h3>Book Your Stay</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="checkin">Check-in</label>
-          <input type="date" id="checkin" name="checkin" min="${min_date}" required>
-        </div>
-        <div class="form-group">
-          <label for="checkout">Check-out</label>
-          <input type="date" id="checkout" name="checkout" min="${min_date}" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="guests">Number of Guests</label>
-        <select id="guests" name="guests" required>
-          <option value="">Select guests</option>
-          <option value="1">1 guest</option>
-          <option value="2">2 guests</option>
-          <option value="3">3 guests</option>
-          <option value="4">4 guests</option>
-          <option value="5">5 guests</option>
-          <option value="6">6 guests</option>
-          <option value="7">7 guests</option>
-          <option value="8">8 guests</option>
-          <option value="9">9 guests</option>
-          <option value="10">10 guests</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="your@email.com" required>
-      </div>
-      <button type="button" id="check-availability-btn" class="submit-btn">Check Availability</button>
-    </div>
-  `;
-
-  const widget = injectInlineWidget('booking-form-container', formHTML);
-  if (!widget) return;
-
-  // Handle form submission
-  widget.querySelector('#check-availability-btn').addEventListener('click', () => {
-    const checkin = widget.querySelector('#checkin').value;
-    const checkout = widget.querySelector('#checkout').value;
-    const guests = widget.querySelector('#guests').value;
-    const email = widget.querySelector('#email').value;
-
-    if (!checkin || !checkout || !guests || !email) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    // Send message to chat with the booking details
-    const message = `I want to book from ${checkin} to ${checkout} for ${guests} guest(s). My email is ${email}`;
-
-    // Remove the form
-    widget.remove();
-
-    // Send the message to ChatKit
-    if (chatkitElement && chatkitElement.sendMessage) {
-      chatkitElement.sendMessage(message);
-    }
-  });
-
-  // Update checkout min date when checkin changes
-  widget.querySelector('#checkin').addEventListener('change', (e) => {
-    const checkoutInput = widget.querySelector('#checkout');
-    checkoutInput.min = e.target.value;
-    if (checkoutInput.value && checkoutInput.value <= e.target.value) {
-      checkoutInput.value = '';
-    }
-  });
-}
-
 async function handleStripeCheckout(data) {
   const { client_secret } = data;
-
-  // Remove booking form if still present
-  const form = document.getElementById('booking-form-container');
-  if (form) form.remove();
 
   const checkoutHTML = `
     <div class="stripe-checkout-wrapper">
@@ -140,7 +63,7 @@ async function handleStripeCheckout(data) {
     </div>
   `;
 
-  const widget = injectInlineWidget('stripe-checkout-container', checkoutHTML);
+  const widget = injectStripeWidget(checkoutHTML);
   if (!widget) return;
 
   // Initialize Stripe embedded checkout
@@ -165,14 +88,12 @@ async function initChatKit() {
     theme: 'light'
   });
 
-  // Listen for client effects via DOM event
+  // Listen for client effects (Stripe checkout only - booking form uses ChatKit widgets)
   chatkit.addEventListener('chatkit.effect', async (event) => {
     const { name, data } = event.detail;
     console.log('Received effect:', name, data);
     if (name === 'stripe_checkout') {
       await handleStripeCheckout(data);
-    } else if (name === 'booking_form') {
-      handleBookingForm(data);
     }
   });
 

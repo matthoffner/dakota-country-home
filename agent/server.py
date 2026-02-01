@@ -1,11 +1,13 @@
 """ChatKit server for Dakota Country Home booking agent."""
 
 import os
+from pathlib import Path
 from typing import Any, AsyncIterator
 
 from agents import Agent, Runner, function_tool, RunContextWrapper
 from chatkit.agents import AgentContext, simple_to_agent_input, stream_agent_response
 from chatkit.server import ChatKitServer
+from chatkit.widgets import WidgetTemplate
 from chatkit.types import (
     Action,
     ThreadMetadata,
@@ -18,6 +20,10 @@ from .store import BookingStore
 from .tools.availability import check_availability
 from .tools.pricing import calculate_quote
 from .tools.stripe_checkout import create_checkout_session
+
+# Load widget templates
+WIDGET_DIR = Path(__file__).parent
+BOOKING_FORM_TEMPLATE = WidgetTemplate.from_file(str(WIDGET_DIR / "booking_form.widget"))
 
 BOOKING_INSTRUCTIONS = """
 You are the booking assistant for Dakota Country Home, a beautiful vacation rental.
@@ -53,17 +59,11 @@ async def show_booking_form(
     from datetime import date, timedelta
     min_date = (date.today() + timedelta(days=1)).isoformat()
 
-    # Send client effect to render the booking form
-    await ctx.context.stream(
-        ClientEffectEvent(
-            name="booking_form",
-            data={
-                "min_date": min_date,
-            },
-        )
-    )
+    # Build and stream the booking form widget inline in the chat
+    widget = BOOKING_FORM_TEMPLATE.build({"min_date": min_date})
+    await ctx.context.stream_widget(widget)
 
-    return "Booking form displayed. Please fill in your dates, number of guests, and email."
+    return "Booking form displayed. Please fill in your check-in date, check-out date, number of guests, and email, then click Check Availability."
 
 
 @function_tool(description_override="Check if dates are available for booking. start_date and end_date should be in YYYY-MM-DD format.")
@@ -166,7 +166,7 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         """Handle form submissions and widget actions."""
         action_type = action.type
 
-        if action_type == "booking.check_availability":
+        if action_type == "booking.submit":
             # Extract form values
             form_values = action.payload.get("formValues", {})
             checkin = form_values.get("checkin", "")
