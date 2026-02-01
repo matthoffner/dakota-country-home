@@ -258,7 +258,6 @@ body {
   min-height: 100vh;
   background: var(--color-warm-white);
   position: relative;
-  overflow: hidden;
 }
 
 #chat-container {
