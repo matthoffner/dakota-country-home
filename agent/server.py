@@ -15,7 +15,6 @@ from chatkit.types import (
     UserMessageItem,
     ClientEffectEvent,
     AssistantMessageItem,
-    OutputText,
 )
 
 from .store import BookingStore
@@ -188,7 +187,7 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
                 # Show error message
                 yield AssistantMessageItem(
                     id=self.store.generate_item_id("assistant_message", thread, context),
-                    content=[OutputText(text="Please fill in all fields: check-in date, check-out date, number of guests, and email.")],
+                    content=[{"type": "output_text", "text": "Please fill in all fields: check-in date, check-out date, number of guests, and email."}],
                 )
                 return
 
@@ -198,7 +197,7 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             if not availability.get("available"):
                 yield AssistantMessageItem(
                     id=self.store.generate_item_id("assistant_message", thread, context),
-                    content=[OutputText(text=f"Sorry, those dates are not available. {availability.get('message', '')}")],
+                    content=[{"type": "output_text", "text": f"Sorry, those dates are not available. {availability.get('message', '')}"}],
                 )
                 return
 
@@ -231,7 +230,7 @@ I'll now show you the payment form to complete your booking."""
 
             yield AssistantMessageItem(
                 id=self.store.generate_item_id("assistant_message", thread, context),
-                content=[OutputText(text=message)],
+                content=[{"type": "output_text", "text": message}],
             )
 
             # Create Stripe checkout and send effect
