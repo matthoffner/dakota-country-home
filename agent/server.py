@@ -14,6 +14,8 @@ from chatkit.types import (
     ThreadStreamEvent,
     UserMessageItem,
     ClientEffectEvent,
+    AssistantMessageItem,
+    OutputText,
 )
 
 from .store import BookingStore
@@ -184,10 +186,9 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             # Validate
             if not all([checkin, checkout, guests, email]):
                 # Show error message
-                from chatkit.types import AssistantMessageItem, TextContent
                 yield AssistantMessageItem(
                     id=self.store.generate_item_id("assistant_message", thread, context),
-                    content=[TextContent(text="Please fill in all fields: check-in date, check-out date, number of guests, and email.")],
+                    content=[OutputText(text="Please fill in all fields: check-in date, check-out date, number of guests, and email.")],
                 )
                 return
 
@@ -195,10 +196,9 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             availability = check_availability(checkin, checkout)
 
             if not availability.get("available"):
-                from chatkit.types import AssistantMessageItem, TextContent
                 yield AssistantMessageItem(
                     id=self.store.generate_item_id("assistant_message", thread, context),
-                    content=[TextContent(text=f"Sorry, those dates are not available. {availability.get('message', '')}")],
+                    content=[OutputText(text=f"Sorry, those dates are not available. {availability.get('message', '')}")],
                 )
                 return
 
@@ -215,7 +215,6 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             }
 
             # Show quote and proceed to payment
-            from chatkit.types import AssistantMessageItem, TextContent
             nights = quote.get("nights", 0)
             total = quote.get("total_cents", 0) / 100
 
@@ -232,7 +231,7 @@ I'll now show you the payment form to complete your booking."""
 
             yield AssistantMessageItem(
                 id=self.store.generate_item_id("assistant_message", thread, context),
-                content=[TextContent(text=message)],
+                content=[OutputText(text=message)],
             )
 
             # Create Stripe checkout and send effect
