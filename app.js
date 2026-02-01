@@ -88,12 +88,34 @@ async function initChatKit() {
     theme: 'light'
   });
 
-  // Listen for client effects (Stripe checkout only - booking form uses ChatKit widgets)
+  // Listen for client effects (Stripe checkout)
   chatkit.addEventListener('chatkit.effect', async (event) => {
     const { name, data } = event.detail;
     console.log('Received effect:', name, data);
     if (name === 'stripe_checkout') {
       await handleStripeCheckout(data);
+    }
+  });
+
+  // Listen for widget actions (form submissions)
+  chatkit.addEventListener('chatkit.action', async (event) => {
+    const { type, payload } = event.detail;
+    console.log('Received action:', type, payload);
+
+    if (type === 'booking.submit') {
+      // Extract form values and send as a chat message
+      const { checkin, checkout, guests, email } = payload || {};
+
+      // Parse ISO dates if needed
+      const checkinDate = checkin?.split?.('T')?.[0] || checkin;
+      const checkoutDate = checkout?.split?.('T')?.[0] || checkout;
+
+      if (checkinDate && checkoutDate && guests && email) {
+        const message = `I want to book from ${checkinDate} to ${checkoutDate} for ${guests} guest(s). My email is ${email}`;
+        if (chatkit.sendMessage) {
+          chatkit.sendMessage(message);
+        }
+      }
     }
   });
 
