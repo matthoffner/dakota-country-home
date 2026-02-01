@@ -167,12 +167,19 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         action_type = action.type
 
         if action_type == "booking.submit":
-            # Extract form values
-            form_values = action.payload.get("formValues", {})
+            # Extract form values - ChatKit may pass them directly or nested
+            payload = action.payload or {}
+            form_values = payload.get("formValues", payload)
             checkin = form_values.get("checkin", "")
             checkout = form_values.get("checkout", "")
             guests = form_values.get("guests", "")
             email = form_values.get("email", "")
+
+            # Handle ISO date strings from DatePicker
+            if checkin and "T" in str(checkin):
+                checkin = str(checkin).split("T")[0]
+            if checkout and "T" in str(checkout):
+                checkout = str(checkout).split("T")[0]
 
             # Validate
             if not all([checkin, checkout, guests, email]):
