@@ -93,19 +93,19 @@ async function initChatKit() {
       greeting: 'Welcome to Dakota Country Home',
       prompts: [
         {
-          name: 'Book a stay',
+          label: 'Book a stay',
           prompt: 'I\'d like to book a stay at Dakota Country Home',
           icon: 'calendar'
         },
         {
-          name: 'Check availability',
+          label: 'Check availability',
           prompt: 'What dates are available for booking?',
           icon: 'search'
         },
         {
-          name: 'Learn about the property',
+          label: 'Learn about the property',
           prompt: 'Tell me about Dakota Country Home and its amenities',
-          icon: 'home'
+          icon: 'write'
         }
       ]
     }
