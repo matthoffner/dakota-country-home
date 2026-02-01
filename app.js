@@ -85,17 +85,7 @@ async function initChatKit() {
       url: '/api/chatkit',
       domainKey: 'domain_pk_697e463b99c88193ab7306989319aad80d6a6d26fd06e5e1'
     },
-    theme: {
-      colorScheme: 'light',
-      color: {
-        accent: {
-          primary: '#7D8471',
-          level: 2
-        }
-      },
-      radius: 'round',
-      typography: { fontFamily: "'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif" }
-    },
+    theme: 'light',
     composer: {
       placeholder: 'Ask about availability, amenities, or book your stay...'
     },
@@ -118,12 +108,6 @@ async function initChatKit() {
           icon: 'home'
         }
       ]
-    },
-    header: {
-      enabled: true
-    },
-    history: {
-      enabled: true
     }
   });
 
