@@ -2,6 +2,7 @@
 
 import os
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator
 
@@ -188,6 +189,8 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
                 # Show error message
                 yield AssistantMessageItem(
                     id=f"msg_{uuid.uuid4().hex[:16]}",
+                    thread_id=thread.id,
+                    created_at=datetime.now(timezone.utc),
                     content=[{"type": "output_text", "text": "Please fill in all fields: check-in date, check-out date, number of guests, and email."}],
                 )
                 return
@@ -198,6 +201,8 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
             if not availability.get("available"):
                 yield AssistantMessageItem(
                     id=f"msg_{uuid.uuid4().hex[:16]}",
+                    thread_id=thread.id,
+                    created_at=datetime.now(timezone.utc),
                     content=[{"type": "output_text", "text": f"Sorry, those dates are not available. {availability.get('message', '')}"}],
                 )
                 return
@@ -231,6 +236,8 @@ I'll now show you the payment form to complete your booking."""
 
             yield AssistantMessageItem(
                 id=f"msg_{uuid.uuid4().hex[:16]}",
+                thread_id=thread.id,
+                created_at=datetime.now(timezone.utc),
                 content=[{"type": "output_text", "text": message}],
             )
 
