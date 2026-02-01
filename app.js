@@ -85,7 +85,46 @@ async function initChatKit() {
       url: '/api/chatkit',
       domainKey: 'domain_pk_697e463b99c88193ab7306989319aad80d6a6d26fd06e5e1'
     },
-    theme: 'light'
+    theme: {
+      colorScheme: 'light',
+      color: {
+        accent: {
+          primary: '#7D8471',
+          level: 2
+        }
+      },
+      radius: 'round',
+      typography: { fontFamily: "'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif" }
+    },
+    composer: {
+      placeholder: 'Ask about availability, amenities, or book your stay...'
+    },
+    startScreen: {
+      greeting: 'Welcome to Dakota Country Home',
+      prompts: [
+        {
+          name: 'Book a stay',
+          prompt: 'I\'d like to book a stay at Dakota Country Home',
+          icon: 'calendar'
+        },
+        {
+          name: 'Check availability',
+          prompt: 'What dates are available for booking?',
+          icon: 'search'
+        },
+        {
+          name: 'Learn about the property',
+          prompt: 'Tell me about Dakota Country Home and its amenities',
+          icon: 'home'
+        }
+      ]
+    },
+    header: {
+      enabled: true
+    },
+    history: {
+      enabled: true
+    }
   });
 
   // Listen for client effects (Stripe checkout)
