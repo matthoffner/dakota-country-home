@@ -157,23 +157,23 @@ class BookingChatServer(ChatKitServer[dict[str, Any]]):
         async for event in stream_agent_response(agent_context, result):
             yield event
 
-    async def handle_action(
+    async def action(
         self,
         thread: ThreadMetadata,
         action: Action,
+        sender: Any,
         context: dict[str, Any],
     ) -> AsyncIterator[ThreadStreamEvent]:
         """Handle form submissions and widget actions."""
         action_type = action.type
 
         if action_type == "booking.submit":
-            # Extract form values - ChatKit may pass them directly or nested
+            # Form values are passed directly in payload (keyed by field name)
             payload = action.payload or {}
-            form_values = payload.get("formValues", payload)
-            checkin = form_values.get("checkin", "")
-            checkout = form_values.get("checkout", "")
-            guests = form_values.get("guests", "")
-            email = form_values.get("email", "")
+            checkin = payload.get("checkin", "")
+            checkout = payload.get("checkout", "")
+            guests = payload.get("guests", "")
+            email = payload.get("email", "")
 
             # Handle ISO date strings from DatePicker
             if checkin and "T" in str(checkin):
