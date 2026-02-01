@@ -54,6 +54,7 @@ Guide guests through booking their stay. Be concise but warm. Answer questions a
 - Scenic views overlooking the Missouri River countryside
 - Rolling hills, valleys, and lake views
 - Total privacy on a working farm property
+- Get directions: https://www.google.com/maps/dir//42527+310th+St,+Tabor,+SD+57063/@43.5267211,-96.7172916,15z
 
 **Amenities:**
 - Wrap-around deck with sunrise and sunset views
